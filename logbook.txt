@@ -1,0 +1,10 @@
+17/2/26
+Created URDF for URSULA, created URSULA folder and starting compiling needed files. 
+Creating modified serial bridge as teleop only outputs velocity and angle
+Ran out of Claude messages, next message:
+Please give me the commands to run this workflow, from running the joystick, interpreting it with the f310_teleop to processing it using our modified serial bridge to the point where it is recieved by the arduino. my colleague will write the arduino code so this can be left. 
+
+Temp disabled turbo mode - button 4 being used for emergancy brake. 
+need to either change back to turbo mode or choose diff button for turbo - current button =-1
+
+Check bandwidth used in serial_bridge_params - think it is differnet to what we were using last time. 

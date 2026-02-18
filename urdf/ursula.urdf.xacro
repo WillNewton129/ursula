@@ -1,0 +1,235 @@
+<?xml version="1.0"?>
+<robot name="URSULA" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="lidar.xacro"/>
+  <xacro:include filename="oak_d.xacro"/>
+
+  <xacro:property name="chassis_length"     value="0.480"/>
+  <xacro:property name="chassis_width"      value="0.560"/>
+  <xacro:property name="chassis_height"     value="0.2398"/>
+  <xacro:property name="chassis_z_off"      value="0.195"/>
+  <xacro:property name="chassis_center_z"   value="${chassis_z_off + chassis_height / 2.0}"/>
+
+  <xacro:property name="base_box_height"    value="0.133"/>
+  <xacro:property name="chamfer_height"     value="${chassis_height - base_box_height}"/>
+  <xacro:property name="chamfer_length"     value="${chassis_length * 0.90}"/>
+  <xacro:property name="chamfer_width"      value="${chassis_width  * 0.90}"/>
+  
+  <xacro:property name="base_box_z_rel"     value="${-chassis_height / 2.0 + base_box_height / 2.0}"/>
+  <xacro:property name="chamfer_z_rel"      value="${-chassis_height / 2.0 + base_box_height + chamfer_height / 2.0}"/>
+
+  <xacro:property name="wheel_radius"       value="0.085"/>
+  <xacro:property name="wheel_width"        value="0.040"/>
+
+  <xacro:property name="wheel_y_abs"        value="${chassis_width / 2.0 + 0.110 + wheel_width / 2.0}"/>
+  <xacro:property name="wheel_x_front"      value="${chassis_length / 2.0 - 0.125}"/>
+  <xacro:property name="wheel_z_rel"        value="${wheel_radius - chassis_center_z}"/>
+
+  <xacro:property name="rod_radius"         value="0.020"/>
+  <xacro:property name="conn_length"        value="0.050"/>
+  <xacro:property name="conn_radius"        value="0.020"/>
+
+  <xacro:property name="conn_start_y"       value="${wheel_y_abs - conn_length}"/>
+  
+  <xacro:property name="mount_y_abs"        value="${chassis_width / 2.0}"/>
+  <xacro:property name="mount_z"            value="${-chassis_height / 2.0}"/>
+
+  <xacro:property name="rod_dy"             value="${conn_start_y - mount_y_abs}"/>
+  <xacro:property name="rod_dz"             value="${wheel_z_rel - mount_z}"/>
+  <xacro:property name="rod_length"         value="${sqrt(rod_dy*rod_dy + rod_dz*rod_dz)}"/>
+
+  <xacro:property name="rod_mid_y_abs"      value="${(mount_y_abs + conn_start_y) / 2.0}"/>
+  <xacro:property name="rod_mid_z"          value="${(mount_z + wheel_z_rel) / 2.0}"/>
+
+  <xacro:property name="conn_mid_y_abs"     value="${(conn_start_y + wheel_y_abs) / 2.0}"/>
+
+  <material name="chassis_dark">
+    <color rgba="0.18 0.18 0.22 1.0"/>
+  </material>
+  <material name="chassis_accent">
+    <color rgba="0.25 0.25 0.32 1.0"/>
+  </material>
+  <material name="wheel_rubber">
+    <color rgba="0.12 0.12 0.12 1.0"/>
+  </material>
+  <material name="suspension_metal">
+    <color rgba="0.80 0.30 0.10 1.0"/>
+  </material>
+
+  <xacro:macro name="ursula_wheel_and_suspension" params="name parent wheel_x side_sign">
+
+    <link name="${name}_susp_rod_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.15"/>
+        <inertia ixx="0.0005" ixy="0" ixz="0"
+                 iyy="0.0005" iyz="0"
+                 izz="0.0001"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${rod_radius}" length="${rod_length}"/>
+        </geometry>
+        <material name="suspension_metal"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${rod_radius}" length="${rod_length}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${name}_susp_rod_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child  link="${name}_susp_rod_link"/>
+      <origin xyz="${wheel_x} ${side_sign * rod_mid_y_abs} ${rod_mid_z}"
+              rpy="${side_sign * 0.62832} 0 0"/>
+    </joint>
+
+    <link name="${name}_susp_conn_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.05"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0"
+                 iyy="0.0001" iyz="0"
+                 izz="0.00005"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${conn_radius}" length="${conn_length}"/>
+        </geometry>
+        <material name="suspension_metal"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${conn_radius}" length="${conn_length}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${name}_susp_conn_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child  link="${name}_susp_conn_link"/>
+      <origin xyz="${wheel_x} ${side_sign * conn_mid_y_abs} ${wheel_z_rel}"
+              rpy="${-side_sign * 1.5708} 0 0"/>
+    </joint>
+
+    <link name="${name}_wheel_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.80"/>
+        <inertia ixx="0.0015" ixy="0" ixz="0"
+                 iyy="0.0010" iyz="0"
+                 izz="0.0010"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="wheel_rubber"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="${parent}"/>
+      <child  link="${name}_wheel_link"/>
+      <origin xyz="${wheel_x} ${side_sign * wheel_y_abs} ${wheel_z_rel}"
+              rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="0.01" friction="0.50"/>
+      <limit effort="10.0" velocity="10.0"/>
+    </joint>
+
+  </xacro:macro>
+
+  <xacro:macro name="ursula_wheels" params="parent">
+    <xacro:ursula_wheel_and_suspension
+        name="front_left"  parent="${parent}"
+        wheel_x="${wheel_x_front}"  side_sign="1"/>
+    <xacro:ursula_wheel_and_suspension
+        name="front_right" parent="${parent}"
+        wheel_x="${wheel_x_front}"  side_sign="-1"/>
+    <xacro:ursula_wheel_and_suspension
+        name="rear_left"   parent="${parent}"
+        wheel_x="${-wheel_x_front}" side_sign="1"/>
+    <xacro:ursula_wheel_and_suspension
+        name="rear_right"  parent="${parent}"
+        wheel_x="${-wheel_x_front}" side_sign="-1"/>
+  </xacro:macro>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0"
+               iyy="0.0001" iyz="0"
+               izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <link name="chassis_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="15.0"/>
+      <inertia ixx="0.350" ixy="0" ixz="0"
+               iyy="0.300" iyz="0"
+               izz="0.450"/>
+    </inertial>
+    
+    <visual>
+      <origin xyz="0 0 ${base_box_z_rel}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${base_box_height}"/>
+      </geometry>
+      <material name="chassis_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${base_box_z_rel}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${base_box_height}"/>
+      </geometry>
+    </collision>
+    
+    <visual>
+      <origin xyz="0 0 ${chamfer_z_rel}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chamfer_length} ${chamfer_width} ${chamfer_height}"/>
+      </geometry>
+      <material name="chassis_accent"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${chamfer_z_rel}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chamfer_length} ${chamfer_width} ${chamfer_height}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="chassis_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="chassis_link"/>
+    <origin xyz="0 0 ${chassis_center_z}" rpy="0 0 0"/>
+  </joint>
+
+  <xacro:ursula_wheels parent="chassis_link"/>
+
+  <xacro:slamtec_rplidar_a3 parent="chassis_link">
+    <origin xyz="${chassis_length / 2.0 - 0.2419} 0 ${0.4485 - chassis_center_z}" rpy="0 0 0"/>
+  </xacro:slamtec_rplidar_a3>
+
+  <xacro:luxonis_oak_d parent="chassis_link">
+    <origin xyz="${chassis_length / 2.0 + 0.001} 0 ${0.1005 - chassis_height / 2.0}" rpy="0 0 0"/>
+  </xacro:luxonis_oak_d>
+
+</robot>

@@ -1,0 +1,6 @@
+serial_cmd_bridge:
+  ros__parameters:
+    serial_port: "/dev/ttyACM0"  # Arduino Uno serial port
+    baud_rate: 115200
+    wheel_base: 0.56              # 560mm chassis width
+    estop_button: 4               # LB button (button index 4)

@@ -1,0 +1,51 @@
+teleop_twist_joy_node:
+  ros__parameters:
+    # Require enable button to publish (hold RB)
+    require_enable_button: true
+    enable_button: 5           # RB (hold to enable movement)
+    enable_turbo_button: -1    # Disable turbo (we'll use button 4 for estop)
+
+    #need to re-enable turbo!!!!!
+    
+    # Deadzone for joystick axes to prevent drift
+    deadzone: 0.1
+    
+    # Linear axis mapping (x = forward/back, y = left/right, z = up/down)
+    axis_linear:
+      x: 1     # left stick vertical -> axes[1]
+      y: -1
+      z: -1
+    
+    # Scales for normal speed (tune to your motors)
+    scale_linear:
+      x: 0.10    # forward/backward speed
+      y: 0.0
+      z: 0.0
+    
+    # Turbo disabled (set to same as normal)
+    scale_linear_turbo:
+      x: 0.10
+      y: 0.0
+      z: 0.0
+    
+    # Angular axis mapping (yaw = rotation)
+    axis_angular:
+      yaw: 0     # right stick horizontal -> axes[0]
+      pitch: -1
+      roll: -1
+    
+    # Angular scaling
+    scale_angular:
+      yaw: 0.10   # rotation speed
+      pitch: 0.0
+      roll: 0.0
+    
+    scale_angular_turbo:
+      yaw: 0.10
+      pitch: 0.0
+      roll: 0.0
+    
+    # Misc options
+    inverted_reverse: false
+    publish_stamped_twist: false
+    frame: "teleop_twist_joy"
