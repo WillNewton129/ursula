@@ -3,9 +3,10 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Joy
-from std_msgs.msg import String
 import serial
-import math
+
+MAX_PWM = 255  # Scale factor from m/s to PWM (adjust if needed)
+SEND_HZ = 20
 
 class SerialCmdBridge(Node):
     def __init__(self):
@@ -35,29 +36,22 @@ class SerialCmdBridge(Node):
         # State
         self.linear_vel = 0.0
         self.angular_vel = 0.0
-        self.estop_active = 1  # Default: estop ON (safe state)
+        self.estop_active = 1  # 1 = stopped, 0 = go
         
         # Subscriptions
-        self.cmd_vel_sub = self.create_subscription(
-            Twist, '/cmd_vel', self.cmd_vel_callback, 10)
-        self.joy_sub = self.create_subscription(
-            Joy, '/joy', self.joy_callback, 10)
+        self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
+        self.create_subscription(Joy, '/joy', self.joy_callback, 10)
         
-        # Timer to send commands at fixed rate
-        self.timer = self.create_timer(0.05, self.send_command)  # 20Hz
-        
+        # Timer
+        self.timer = self.create_timer(1.0 / SEND_HZ, self.send_command)
         self.get_logger().info('Serial command bridge started')
         self.get_logger().info(f'Turn multiplier: {self.turn_multiplier}')
     
     def cmd_vel_callback(self, msg):
-        """Receive cmd_vel from teleop"""
         self.linear_vel = msg.linear.x
         self.angular_vel = msg.angular.z
     
     def joy_callback(self, msg):
-        """Monitor estop button from joystick"""
-        # Button 4 (LB): when pressed (1), estop is OFF (send 0)
-        # When not pressed (0), estop is ON (send 1)
         if len(msg.buttons) > self.estop_button:
             button_pressed = msg.buttons[self.estop_button]
             self.estop_active = 0 if button_pressed else 1
@@ -78,25 +72,28 @@ class SerialCmdBridge(Node):
         return left_vel, right_vel
     
     def send_command(self):
-        """Send command to Arduino"""
-        if self.serial is None or not self.serial.is_open:
+        if not self.serial or not self.serial.is_open:
             return
         
-        # Convert to differential drive
-        left_vel, right_vel = self.diff_drive_kinematics(
-            self.linear_vel, self.angular_vel)
+        left_vel, right_vel = self.diff_drive_kinematics(self.linear_vel, self.angular_vel)
         
-        # Format: CMD,left_vel,right_vel,estop\n
-        command = f"CMD,{left_vel:.3f},{right_vel:.3f},{self.estop_active}\n"
+        # Convert to integer PWM
+        left_pwm = int(max(-1.0, min(1.0, left_vel)) * MAX_PWM)
+        right_pwm = int(max(-1.0, min(1.0, right_vel)) * MAX_PWM)
+        
+        # Format: CMD,left_pwm,right_pwm,estop\n
+        command = f"CMD,{left_pwm},{right_pwm},{self.estop_active}\n"
         
         try:
             self.serial.write(command.encode('utf-8'))
-            # self.get_logger().debug(f'Sent: {command.strip()}')
+            self.get_logger().info(f'Sent: {command.strip()}')
         except Exception as e:
             self.get_logger().error(f'Serial write error: {e}')
     
     def destroy_node(self):
         if self.serial and self.serial.is_open:
+            # Stop motors before closing
+            self.serial.write(b'CMD,0,0,1\n')
             self.serial.close()
         super().destroy_node()
 
