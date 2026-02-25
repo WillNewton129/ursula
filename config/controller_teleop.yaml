@@ -18,7 +18,7 @@ teleop_twist_joy_node:
     
     # Scales for normal speed (tune to your motors)
     scale_linear:
-      x: 0.10    # forward/backward speed
+      x: 0.2    # forward/backward speed
       y: 0.0
       z: 0.0
     

@@ -16,11 +16,13 @@ class SerialCmdBridge(Node):
         self.declare_parameter('baud_rate', 115200)
         self.declare_parameter('wheel_base', 0.56)  # 560mm width
         self.declare_parameter('estop_button', 4)   # LB button (button 4)
+        self.declare_parameter('turn_multiplier', 3.0)  # Amplify turning for skid-steer
         
         serial_port = self.get_parameter('serial_port').value
         baud_rate = self.get_parameter('baud_rate').value
         self.wheel_base = self.get_parameter('wheel_base').value
         self.estop_button = self.get_parameter('estop_button').value
+        self.turn_multiplier = self.get_parameter('turn_multiplier').value
         
         # Serial connection
         try:
@@ -45,6 +47,7 @@ class SerialCmdBridge(Node):
         self.timer = self.create_timer(0.05, self.send_command)  # 20Hz
         
         self.get_logger().info('Serial command bridge started')
+        self.get_logger().info(f'Turn multiplier: {self.turn_multiplier}')
     
     def cmd_vel_callback(self, msg):
         """Receive cmd_vel from teleop"""
@@ -60,11 +63,18 @@ class SerialCmdBridge(Node):
             self.estop_active = 0 if button_pressed else 1
     
     def diff_drive_kinematics(self, linear, angular):
-        """Convert cmd_vel to left/right wheel velocities"""
-        # v_left = linear - (angular * wheel_base / 2)
-        # v_right = linear + (angular * wheel_base / 2)
-        left_vel = linear - (angular * self.wheel_base / 2.0)
-        right_vel = linear + (angular * self.wheel_base / 2.0)
+        """Convert cmd_vel to left/right wheel velocities
+        
+        For skid-steer robots, we amplify the angular component
+        because wheels need to skid rather than roll freely.
+        """
+        # Apply turn multiplier to angular velocity for skid-steering
+        angular_adjusted = angular * self.turn_multiplier
+        
+        # Standard differential drive equations
+        left_vel = linear - (angular_adjusted * self.wheel_base / 2.0)
+        right_vel = linear + (angular_adjusted * self.wheel_base / 2.0)
+        
         return left_vel, right_vel
     
     def send_command(self):

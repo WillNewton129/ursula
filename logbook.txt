@@ -8,3 +8,20 @@ Temp disabled turbo mode - button 4 being used for emergancy brake.
 need to either change back to turbo mode or choose diff button for turbo - current button =-1
 
 Check bandwidth used in serial_bridge_params - think it is differnet to what we were using last time. 
+
+
+18/02/26
+Launch files on jetson need uploading to git / loading onto laptop
+breaking & steering need looking into
+managed to get new serial bridge working but arduio code did not recieve well
+Tried running lidar and got: (maybe create params file & do properly)
+
+uoljetson@uoljetson-desktop:~$ ros2 launch rplidar_ros rplidar_a3_launch.py
+[INFO] [launch]: All log files can be found below /home/uoljetson/.ros/log/2026-02-18-14-55-01-649607-uoljetson-desktop-3312
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [rplidar_node-1]: process started with pid [3313]
+[rplidar_node-1] [INFO] [1771426501.793468373] [rplidar_node]: RPLidar running on ROS2 package rplidar_ros. RPLIDAR SDK Version:2.1.0
+[rplidar_node-1] [ERROR] [1771426504.302947002] [rplidar_node]: Error, operation time out. SL_RESULT_OPERATION_TIMEOUT! 
+[ERROR] [rplidar_node-1]: process has died [pid 3313, exit code 255, cmd '/home/uoljetson/ros2_ws/install/rplidar_ros/lib/rplidar_ros/rplidar_node --ros-args -r __node:=rplidar_node --params-file /tmp/launch_params_l6zp_s__'].
+
+need to also make slam & nav2 config files.
