@@ -10,6 +10,15 @@
       <xacro:ursula_gazebo/>
   -->
 
+  <!-- Preserve fixed joints so lidar_link is not collapsed into base_link by Gazebo -->
+  <gazebo reference="lidar_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <gazebo reference="lidar_scan_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
   <xacro:macro name="ursula_gazebo">
 
     <!-- ================================================================ -->
@@ -31,7 +40,7 @@
     <gazebo reference="front_left_wheel_link">
       <material>Gazebo/Black</material>
       <mu1>0.9</mu1>
-      <mu2>0.4</mu2>   <!-- Lower lateral friction = skid steer behaviour -->
+      <mu2>0.4</mu2>
       <kp>1000000.0</kp>
       <kd>100.0</kd>
       <minDepth>0.001</minDepth>
@@ -69,41 +78,35 @@
     </gazebo>
 
     <!-- ================================================================ -->
-    <!-- SKID STEER DRIVE PLUGIN                                          -->
-    <!-- Controls all 4 wheels. Subscribes to /cmd_vel, publishes /odom  -->
+    <!-- DIFF DRIVE PLUGIN                                                -->
+    <!-- Uses rear wheels only. Front wheels spin passively.             -->
+    <!-- Subscribes to /cmd_vel, publishes /odom                         -->
     <!-- ================================================================ -->
 
     <gazebo>
-      <plugin name="gazebo_ros_skid_steer_drive" filename="libgazebo_ros_skid_steer_drive.so">
+      <plugin name="gazebo_ros_diff_drive" filename="libgazebo_ros_diff_drive.so">
 
         <update_rate>50</update_rate>
 
-        <!-- Wheel joints - must match your URDF joint names exactly -->
-        <left_front_joint>front_left_wheel_joint</left_front_joint>
-        <right_front_joint>front_right_wheel_joint</right_front_joint>
-        <left_rear_joint>rear_left_wheel_joint</left_rear_joint>
-        <right_rear_joint>rear_right_wheel_joint</right_rear_joint>
+        <left_joint>rear_left_wheel_joint</left_joint>
+        <right_joint>rear_right_wheel_joint</right_joint>
 
-        <!-- Robot geometry - must match serial_bridge_params.yaml -->
-        <wheel_separation>0.780</wheel_separation>  <!-- chassis_width + 2*(0.110 + wheel_width/2) = 0.56 + 0.22 = 0.780 -->
-        <wheel_diameter>0.170</wheel_diameter>       <!-- wheel_radius * 2 = 0.085 * 2 -->
+        <!-- Robot geometry -->
+        <wheel_separation>0.780</wheel_separation>
+        <wheel_diameter>0.170</wheel_diameter>
 
-        <!-- Max torque per wheel (swegway motors ~15Nm is conservative) -->
         <max_wheel_torque>20.0</max_wheel_torque>
         <max_wheel_acceleration>1.0</max_wheel_acceleration>
 
-        <!-- Topic names matching the rest of the stack -->
         <command_topic>cmd_vel</command_topic>
         <odometry_topic>odom</odometry_topic>
         <odometry_frame>odom</odometry_frame>
         <robot_base_frame>base_link</robot_base_frame>
 
-        <!-- Publish odometry TF - set false if using rf2o for real odometry -->
         <publish_odom>true</publish_odom>
         <publish_odom_tf>true</publish_odom_tf>
         <publish_wheel_tf>false</publish_wheel_tf>
 
-        <!-- Covariance values - tune once you have real data -->
         <covariance_x>0.001</covariance_x>
         <covariance_y>0.001</covariance_y>
         <covariance_yaw>0.01</covariance_yaw>
@@ -118,13 +121,13 @@
     <gazebo reference="lidar_link">
       <sensor type="ray" name="rplidar_a3">
         <pose>0 0 0 0 0 0</pose>
-        <visualize>false</visualize>   <!-- Set true to see rays in Gazebo -->
-        <update_rate>15</update_rate>  <!-- A3 scans at 5-15Hz -->
+        <visualize>false</visualize>
+        <update_rate>15</update_rate>
 
         <ray>
           <scan>
             <horizontal>
-              <samples>720</samples>       <!-- 0.5 deg resolution (A3 = up to 0.225 deg) -->
+              <samples>720</samples>
               <resolution>1</resolution>
               <min_angle>-3.14159</min_angle>
               <max_angle>3.14159</max_angle>
@@ -132,7 +135,7 @@
           </scan>
           <range>
             <min>0.15</min>
-            <max>25.0</max>  <!-- A3 max range -->
+            <max>25.0</max>
             <resolution>0.01</resolution>
           </range>
           <noise>
@@ -142,10 +145,13 @@
           </noise>
         </ray>
 
-        <plugin name="gazebo_ros_rplidar" filename="libgazebo_ros_laser.so">
-          <topicName>/scan</topicName>
-          <frameName>lidar_link</frameName>
-        </plugin>
+      <plugin name="gazebo_ros_rplidar" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=/scan</remapping>
+        </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>lidar_link</frame_name>
+      </plugin>
       </sensor>
     </gazebo>
 
@@ -158,7 +164,7 @@
       <sensor type="camera" name="oak_d_rgb">
         <update_rate>30.0</update_rate>
         <camera name="oak_d_rgb">
-          <horizontal_fov>1.2217</horizontal_fov>  <!-- ~70 degrees FOV -->
+          <horizontal_fov>1.2217</horizontal_fov>
           <image>
             <width>1920</width>
             <height>1080</height>
@@ -223,7 +229,7 @@
     </gazebo>
 
     <!-- ================================================================ -->
-    <!-- IMU SENSOR (useful for future EKF fusion)                        -->
+    <!-- IMU SENSOR                                                        -->
     <!-- ================================================================ -->
 
     <gazebo reference="base_link">

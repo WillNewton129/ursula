@@ -93,12 +93,12 @@ def generate_launch_description():
     # Joint State Publisher                                                #
     # Publishes zero positions for fixed joints so RViz doesn't complain  #
     # ------------------------------------------------------------------ #
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        parameters=[{'use_sim_time': True}]
-    )
+    # joint_state_publisher = Node(
+    #     package='joint_state_publisher',
+    #     executable='joint_state_publisher',
+    #     name='joint_state_publisher',
+    #     parameters=[{'use_sim_time': True}]
+    # )
 
     # ------------------------------------------------------------------ #
     # Spawn robot in Gazebo                                                #
@@ -160,7 +160,7 @@ def generate_launch_description():
         yaw_spawn_arg,
         gazebo,
         robot_state_publisher,
-        joint_state_publisher,
+        #joint_state_publisher,
         spawn_entity,
         slam_toolbox,
         rviz,

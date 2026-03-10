@@ -18,13 +18,13 @@ teleop_twist_joy_node:
     
     # Scales for normal speed (tune to your motors)
     scale_linear:
-      x: 0.1    # forward/backward speed
+      x: 0.5    # forward/backward speed
       y: 0.0
       z: 0.0
     
     # Turbo disabled (set to same as normal)
     scale_linear_turbo:
-      x: 0.10
+      x: 0.50
       y: 0.0
       z: 0.0
     
@@ -36,7 +36,7 @@ teleop_twist_joy_node:
     
     # Angular scaling
     scale_angular:
-      yaw: 0.10   # rotation speed
+      yaw: 0.80   # rotation speed
       pitch: 0.0
       roll: 0.0
     
