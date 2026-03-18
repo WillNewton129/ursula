@@ -50,6 +50,7 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
+    cmd_vel_topic: cmd_vel_nav
     # Nav2 publishes to /cmd_vel which is remapped to /cmd_vel_nav in
     # nav2_launch.launch.py so twist_mux picks it up at priority 10.
     controller_frequency: 20.0
@@ -74,12 +75,12 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.3
+      desired_linear_vel: 0.2 #cm/s
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 1.5
+      rotate_to_heading_angular_vel: 0.5 #can change to be more aggressive
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
       min_approach_linear_velocity: 0.05
@@ -92,7 +93,7 @@ controller_server:
       regulated_linear_scaling_min_speed: 0.25
       use_rotate_to_heading: true
       rotate_to_heading_min_angle: 0.785   # ~45 deg before committing to forward motion
-      max_angular_accel: 3.2
+      max_angular_accel: 1.0 #can change to be more aggressive
       allow_reversing: false
 
 planner_server:
