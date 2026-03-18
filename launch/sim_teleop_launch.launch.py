@@ -74,7 +74,7 @@ def generate_launch_description():
         name='teleop_twist_joy_node',
         output='screen',
         parameters=[
-            os.path.join(ursula_share, 'config', 'ps4_teleop.yaml'),
+            os.path.join(ursula_share, 'config', 'controller_teleop.yaml'),
             {'use_sim_time': True}
         ]
     )
