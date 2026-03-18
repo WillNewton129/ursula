@@ -1,10 +1,8 @@
 # ============================================================
 # URSULA Nav2 Parameters - ROS 2 Humble
 # ============================================================
-# Key Humble changes from earlier distros:
-#   - recoveries_server  →  behavior_server
-#   - nav2_recoveries    →  nav2_behaviors
-#   - SmacPlannerHybrid available but NavFn is fine for flat indoor
+# use_sim_time is NOT set here — it is passed in by nav2_launch.launch.py
+# so the same params file works for both sim and real robot.
 # ============================================================
 
 bt_navigator:
@@ -52,8 +50,8 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
-    # Nav2 publishes here; twist_mux picks it up at priority 10
-    # Make sure twist_mux.yaml has topic: /cmd_vel_nav
+    # Nav2 publishes to /cmd_vel which is remapped to /cmd_vel_nav in
+    # nav2_launch.launch.py so twist_mux picks it up at priority 10.
     controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5      # Ignored for diff/skid drive
@@ -76,7 +74,7 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.3          # 30 cm/s in sim — increase once confident
+      desired_linear_vel: 0.3
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
@@ -92,7 +90,6 @@ controller_server:
       use_cost_regulated_linear_velocity_scaling: false
       regulated_linear_scaling_min_radius: 0.9
       regulated_linear_scaling_min_speed: 0.25
-      # Skid-steer: rotate to heading before driving forward
       use_rotate_to_heading: true
       rotate_to_heading_min_angle: 0.785   # ~45 deg before committing to forward motion
       max_angular_accel: 3.2
@@ -107,7 +104,6 @@ planner_server:
       use_astar: true
       allow_unknown: true
 
-# ── behavior_server (renamed from recoveries_server in Humble) ──────────────
 behavior_server:
   ros__parameters:
     costmap_topic: local_costmap/costmap_raw
@@ -120,7 +116,6 @@ behavior_server:
       plugin: "nav2_behaviors/BackUp"
     wait:
       plugin: "nav2_behaviors/Wait"
-    # Limits for recovery manoeuvres
     global_frame: odom
     robot_base_frame: base_link
     transform_tolerance: 0.1
@@ -140,8 +135,6 @@ local_costmap:
       width: 4
       height: 4
       resolution: 0.05
-      # URSULA footprint: 480mm long, 780mm wide (including wheels)
-      # Use radius slightly larger than half-diagonal ~0.46m → 0.50m safe
       robot_radius: 0.50
       plugins: ["voxel_layer", "inflation_layer"]
       voxel_layer:

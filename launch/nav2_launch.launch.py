@@ -28,7 +28,7 @@ def generate_launch_description():
 
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='true',
+        default_value='false',
         description='Use simulation (Gazebo) clock if true'
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -37,11 +37,15 @@ def generate_launch_description():
         use_sim_time_arg,
 
         # ── Controller server ─────────────────────────────────────────────
+        # Remapped to /cmd_vel_nav so twist_mux picks it up at priority 10
+        # rather than publishing directly to /cmd_vel (which would bypass
+        # the joystick override)
         Node(
             package='nav2_controller',
             executable='controller_server',
             name='controller_server',
             output='screen',
+            remappings=[('/cmd_vel', '/cmd_vel_nav')],
             parameters=[nav2_params, {'use_sim_time': use_sim_time}]
         ),
 
