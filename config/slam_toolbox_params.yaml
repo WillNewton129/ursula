@@ -29,6 +29,8 @@ slam_toolbox:
     throttle_scans: 1
     transform_publish_period: 0.02
     map_update_interval: 5.0
+    transform_timeout: 0.5        # ← add this, tolerates rf2o gaps
+    tf_buffer_duration: 30.0      # ← add this, longer TF history
     use_scan_matching: true
     use_scan_barycenter: true
     max_laser_range: 25.0         # RPLIDAR A3 max range
