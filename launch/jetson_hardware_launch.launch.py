@@ -171,7 +171,8 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(
                     os.path.join(ursula_share, 'launch', 'nav2_launch.launch.py')
                 ),
-                launch_arguments={'use_sim_time': 'false'}.items()
+                launch_arguments={'use_sim_time': 'false'}.items(),
+                remappings=[('/cmd_vel', '/cmd_vel_nav')]
             )
         ]
     )
