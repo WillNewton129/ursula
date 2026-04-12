@@ -36,6 +36,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 
+from launch.conditions import LaunchConfigurationEquals
+
 
 def generate_launch_description():
     ursula_share = get_package_share_directory('ursula')
@@ -174,14 +176,34 @@ def generate_launch_description():
     # SLAM Toolbox
     # Generates map->odom transform and builds occupancy map
     # ----------------------------------------------------------------
-    slam_toolbox = Node(
-        condition=IfCondition(use_slam),
+    slam_mode_arg = DeclareLaunchArgument(
+        'slam_mode',
+        default_value='mapping',
+        description='SLAM mode: mapping or localization'
+    )
+    slam_mode = LaunchConfiguration('slam_mode')
+
+    # Use PythonExpression or a simple approach with two conditional nodes:
+    slam_toolbox_mapping = Node(
+        condition=LaunchConfigurationEquals('slam_mode', 'mapping'),
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
         output='screen',
         parameters=[
-            os.path.join(ursula_share, 'config', 'slam_toolbox_params.yaml'),
+            os.path.join(ursula_share, 'config', 'slam_toolbox_mapping.yaml'),
+            {'use_sim_time': False}
+        ]
+    )
+
+    slam_toolbox_localise = Node(
+        condition=LaunchConfigurationEquals('slam_mode', 'localization'),
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',  
+        name='slam_toolbox',
+        output='screen',
+        parameters=[
+            os.path.join(ursula_share, 'config', 'slam_toolbox_localisation.yaml'),
             {'use_sim_time': False}
         ]
     )
