@@ -23,7 +23,7 @@
 
       <useBuiltinTransports>false</useBuiltinTransports>
       <userTransports>
-        <transport_descriptor_id>udpv4_transport</transport_descriptor_id>
+        <transport_descriptor_id>tailscale_udp</transport_descriptor_id>
       </userTransports>
 
     </rtps>
@@ -31,12 +31,12 @@
 
   <transport_descriptors>
     <transport_descriptor>
-      <transport_id>udpv4_transport</transport_id>
+      <transport_id>tailscale_udp</transport_id>
       <type>UDPv4</type>
       <interfaceWhiteList>
-        <address>100.113.154.126</address>  <!-- ursula-dev2 Tailscale IP -->
-        <address>100.124.199.113</address>  <!-- ursula-dev1 Tailscale IP -->
-        <address>100.115.207.71</address>   <!-- ursula-jetson Tailscale IP -->
+        <address>100.113.154.126</address>
+        <address>100.124.199.113</address>
+        <address>100.115.207.71</address>
       </interfaceWhiteList>
     </transport_descriptor>
   </transport_descriptors>
