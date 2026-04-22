@@ -89,7 +89,7 @@ controller_server:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
 
       # ── Speeds (tuned for safe operation on real hardware) ──────────────
-      desired_linear_vel: 0.10          # 10 cm/s — conservative for indoors
+      desired_linear_vel: 0.05          # 10 cm/s — conservative for indoors
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
@@ -97,7 +97,7 @@ controller_server:
 
       # rotate_to_heading sends PURE angular velocity (linear=0).
       # Keep this low: at 0.30 rad/s, wheel PWM differential ≈ 96/255.
-      rotate_to_heading_angular_vel: 0.30
+      rotate_to_heading_angular_vel: 0.10
 
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
