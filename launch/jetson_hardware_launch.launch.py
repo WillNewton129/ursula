@@ -132,7 +132,7 @@ def generate_launch_description():
         executable='rf2o_laser_odometry_node',
         name='rf2o_laser_odometry_node',
         output='screen',
-        arguments=['--ros-args', '--log-level', 'rf2o_laser_odometry_node:=WARN'],
+        arguments=['--ros-args', '--log-level', 'rf2o_laser_odometry_node:=ERROR'],
         parameters=[{
             'laser_scan_topic':  '/scan',
             'odom_topic':        '/odom',
@@ -232,7 +232,7 @@ def generate_launch_description():
     #   twist_mux picks that up at priority 10
     # ----------------------------------------------------------------
     nav2 = TimerAction(
-        period=10.0,
+        period=15.0,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
