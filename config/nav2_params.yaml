@@ -67,7 +67,7 @@ controller_server:
     # in nav2_launch.launch.py. Do not add cmd_vel_topic here.
     controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.05
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
@@ -97,7 +97,7 @@ controller_server:
 
       # rotate_to_heading sends PURE angular velocity (linear=0).
       # Keep this low: at 0.30 rad/s, wheel PWM differential ≈ 96/255.
-      rotate_to_heading_angular_vel: 0.10
+      rotate_to_heading_angular_vel: 0.05
 
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
@@ -112,7 +112,7 @@ controller_server:
 
       use_rotate_to_heading: true
       rotate_to_heading_min_angle: 0.785   # ~45 deg before committing to forward motion
-      max_angular_accel: 0.5              # Reduced from 1.0 — gentler acceleration
+      max_angular_accel: 0.2             # Reduced from 1.0 — gentler acceleration
       allow_reversing: false
 
 planner_server:
@@ -140,9 +140,9 @@ behavior_server:
     robot_base_frame: base_link
     transform_tolerance: 0.1
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.5            # Matches rotate_to_heading_angular_vel
-    min_rotational_vel: 0.1
-    rotational_acc_lim: 1.0
+    max_rotational_vel: 0.08            # Matches rotate_to_heading_angular_vel
+    min_rotational_vel: 0.03
+    rotational_acc_lim: 0.2
 
 local_costmap:
   local_costmap:
