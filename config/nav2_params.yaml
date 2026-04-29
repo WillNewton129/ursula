@@ -81,38 +81,38 @@ controller_server:
 
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.15
-      yaw_goal_tolerance: 0.1
+      xy_goal_tolerance: 0.20
+      yaw_goal_tolerance: 0.25
       stateful: true
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
 
       # ── Speeds (tuned for safe operation on real hardware) ──────────────
-      desired_linear_vel: 0.05          # 10 cm/s — conservative for indoors
-      lookahead_dist: 0.6
-      min_lookahead_dist: 0.3
-      max_lookahead_dist: 0.9
-      lookahead_time: 1.5
+      desired_linear_vel: 0.04          # 10 cm/s — conservative for indoors
+      lookahead_dist: 0.25
+      min_lookahead_dist: 0.15
+      max_lookahead_dist: 0.4
+      lookahead_time: 1.0
 
       # rotate_to_heading sends PURE angular velocity (linear=0).
       # Keep this low: at 0.30 rad/s, wheel PWM differential ≈ 96/255.
-      rotate_to_heading_angular_vel: 0.05
+      rotate_to_heading_angular_vel: 0.035
 
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
-      min_approach_linear_velocity: 0.05
-      approach_velocity_scaling_dist: 0.6
+      min_approach_linear_velocity: 0.01
+      approach_velocity_scaling_dist: 1.0
       use_collision_detection: true
       max_allowed_time_to_collision_up_to_carrot: 1.0
       use_regulated_linear_velocity_scaling: true
       use_cost_regulated_linear_velocity_scaling: false
-      regulated_linear_scaling_min_radius: 0.9
-      regulated_linear_scaling_min_speed: 0.05
+      regulated_linear_scaling_min_radius: 0.6
+      regulated_linear_scaling_min_speed: 0.01
 
       use_rotate_to_heading: true
-      rotate_to_heading_min_angle: 0.785   # ~45 deg before committing to forward motion
-      max_angular_accel: 0.2             # Reduced from 1.0 — gentler acceleration
+      rotate_to_heading_min_angle: 0.25   # ~45 deg before committing to forward motion
+      max_angular_accel: 0.12            # Reduced from 1.0 — gentler acceleration
       allow_reversing: false
 
 planner_server:
@@ -140,9 +140,9 @@ behavior_server:
     robot_base_frame: base_link
     transform_tolerance: 0.1
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.08            # Matches rotate_to_heading_angular_vel
-    min_rotational_vel: 0.03
-    rotational_acc_lim: 0.2
+    max_rotational_vel: 0.05            # Matches rotate_to_heading_angular_vel
+    min_rotational_vel: 0.02
+    rotational_acc_lim: 0.12
 
 local_costmap:
   local_costmap:
@@ -179,8 +179,8 @@ local_costmap:
           obstacle_min_range: 0.0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.4
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.65
       always_send_full_costmap: true
 
 global_costmap:
@@ -213,8 +213,8 @@ global_costmap:
           obstacle_min_range: 0.0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.4
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.65
       always_send_full_costmap: true
 
 map_server:
