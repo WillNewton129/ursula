@@ -220,13 +220,13 @@
   <joint name="chassis_joint" type="fixed">
     <parent link="base_link"/>
     <child  link="chassis_link"/>
-    <origin xyz="0 0 ${chassis_center_z}" rpy="0 0 3.14159"/>
+    <origin xyz="0 0 ${chassis_center_z}" rpy="0 0 0"/>
   </joint>
 
   <xacro:ursula_wheels parent="chassis_link"/>
 
   <xacro:slamtec_rplidar_a3 parent="chassis_link">
-    <origin xyz="${chassis_length / 2.0 - 0.2419} 0 ${0.4485 - chassis_center_z}" rpy="0 0 0"/>
+    <origin xyz="${chassis_length / 2.0 - 0.2419} 0 ${0.4485 - chassis_center_z}" rpy="0 0 3.14159"/>
   </xacro:slamtec_rplidar_a3>
 
   <xacro:luxonis_oak_d parent="chassis_link">
