@@ -185,7 +185,7 @@ class DetectionVisualiser(Node):
 
                 cv2.rectangle(frame, (x1, y1), (x2, y2), GREEN_BGR, 2)
 
-                label_text = f'{label} {score:.0%}'
+                label_text = f'{label}'
                 (text_w, text_h), _ = cv2.getTextSize(
                     label_text,
                     cv2.FONT_HERSHEY_SIMPLEX,
