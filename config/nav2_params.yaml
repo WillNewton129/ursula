@@ -76,8 +76,8 @@ controller_server:
 
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.08
-      movement_time_allowance: 30.0
+      required_movement_radius: 0.03
+      movement_time_allowance: 40.0
 
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
@@ -89,7 +89,7 @@ controller_server:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
 
       # ── Speeds (tuned for safe operation on real hardware) ──────────────
-      desired_linear_vel: 0.04          # 10 cm/s — conservative for indoors
+      desired_linear_vel: 0.03          # 10 cm/s — conservative for indoors
       lookahead_dist: 0.35
       min_lookahead_dist: 0.25
       max_lookahead_dist: 0.55
@@ -97,7 +97,7 @@ controller_server:
 
       # rotate_to_heading sends PURE angular velocity (linear=0).
       # Keep this low: at 0.30 rad/s, wheel PWM differential ≈ 96/255.
-      rotate_to_heading_angular_vel: 0.07
+      rotate_to_heading_angular_vel: 0.06
 
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
@@ -111,8 +111,8 @@ controller_server:
       regulated_linear_scaling_min_speed: 0.05
 
       use_rotate_to_heading: true
-      rotate_to_heading_min_angle: 0.12   # ~45 deg before committing to forward motion
-      max_angular_accel: 0.8           # Reduced from 1.0 — gentler acceleration
+      rotate_to_heading_min_angle: 0.18   # ~45 deg before committing to forward motion
+      max_angular_accel: 0.25           # Reduced from 1.0 — gentler acceleration
       allow_reversing: false
 
 planner_server:
@@ -141,8 +141,8 @@ behavior_server:
     transform_tolerance: 0.1
     simulate_ahead_time: 1.0
     max_rotational_vel: 0.06            # Matches rotate_to_heading_angular_vel
-    min_rotational_vel: 0.05
-    rotational_acc_lim: 0.230
+    min_rotational_vel: 0.04
+    rotational_acc_lim: 0.10
 
 local_costmap:
   local_costmap:
