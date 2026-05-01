@@ -97,7 +97,7 @@ controller_server:
 
       # rotate_to_heading sends PURE angular velocity (linear=0).
       # Keep this low: at 0.30 rad/s, wheel PWM differential ≈ 96/255.
-      rotate_to_heading_angular_vel: 0.25
+      rotate_to_heading_angular_vel: 0.5
 
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
@@ -140,8 +140,8 @@ behavior_server:
     robot_base_frame: base_link
     transform_tolerance: 0.1
     simulate_ahead_time: 1.0
-    max_rotational_vel: 0.08            # Matches rotate_to_heading_angular_vel
-    min_rotational_vel: 0.08
+    max_rotational_vel: 0.06            # Matches rotate_to_heading_angular_vel
+    min_rotational_vel: 0.05
     rotational_acc_lim: 0.230
 
 local_costmap:
