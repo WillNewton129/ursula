@@ -17,4 +17,4 @@ serial_cmd_bridge:
     # To allow faster autonomous navigation, raise max_linear_vel in
     # small steps (0.05 m/s at a time) and test in open space first.
     max_linear_vel: 0.3             # m/s  — absolute max forward/back speed
-    max_angular_vel: 0.5            # rad/s — absolute max rotation rate
+    max_angular_vel: 0.15            # rad/s — absolute max rotation rate
