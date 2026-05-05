@@ -28,7 +28,7 @@ from sensor_msgs.msg import Joy
 from std_msgs.msg import Bool, Float32MultiArray
 import serial
 
-MAX_PWM  = 255
+MAX_PWM  = 80
 SEND_HZ  = 20
 
 
@@ -48,6 +48,8 @@ class SerialCmdBridge(Node):
         # These prevent any source (Nav2, teleop) from exceeding safe speeds.
         self.declare_parameter('max_linear_vel',   0.3)   # m/s
         self.declare_parameter('max_angular_vel',  0.5)   # rad/s
+        self.declare_parameter('min_angular_vel', 0.05)
+        self.declare_parameter('angular_deadband', 0.005)
 
         serial_port        = self.get_parameter('serial_port').value
         baud_rate          = self.get_parameter('baud_rate').value
@@ -56,6 +58,8 @@ class SerialCmdBridge(Node):
         self.turn_multiplier   = self.get_parameter('turn_multiplier').value
         self.max_linear_vel    = self.get_parameter('max_linear_vel').value
         self.max_angular_vel   = self.get_parameter('max_angular_vel').value
+        self.min_angular_vel = self.get_parameter('min_angular_vel').value
+        self.angular_deadband = self.get_parameter('angular_deadband').value
 
         # ----------------------------------------------------------------
         # Serial connection
@@ -103,18 +107,33 @@ class SerialCmdBridge(Node):
         self.get_logger().info(
             f'turn_multiplier={self.turn_multiplier}  '
             f'max_linear={self.max_linear_vel} m/s  '
-            f'max_angular={self.max_angular_vel} rad/s'
+            f'max_angular={self.max_angular_vel} rad/s  '
+            f'min_angular={self.min_angular_vel} rad/s  '
+            f'angular_deadband={self.angular_deadband} rad/s'
         )
 
     # ----------------------------------------------------------------
     # Callbacks
-    # ----------------------------------------------------------------
+    # ----------------------------------------------------------------  
     def cmd_vel_callback(self, msg: Twist):
-        # Apply safety caps immediately on receipt
-        self.linear_vel  = max(-self.max_linear_vel,
-                               min(self.max_linear_vel,  msg.linear.x))
-        self.angular_vel = max(-self.max_angular_vel,
-                               min(self.max_angular_vel, msg.angular.z))
+     # Clamp linear velocity
+        self.linear_vel = max(
+        -self.max_linear_vel,
+        min(self.max_linear_vel, msg.linear.x)
+        )
+
+    # Clamp angular velocity first
+        angular = max(
+        -self.max_angular_vel,
+        min(self.max_angular_vel, msg.angular.z)
+        )
+
+    # Lift small non-zero angular commands above the motor deadband
+    # but preserve true zero as zero.
+        if abs(angular) > self.angular_deadband and abs(angular) < self.min_angular_vel:
+            angular = self.min_angular_vel if angular > 0 else -self.min_angular_vel
+
+        self.angular_vel = angular
 
     def joy_callback(self, msg: Joy):
         """Physical LB button (button 4) estop — read directly from joystick."""
