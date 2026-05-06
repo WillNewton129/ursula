@@ -181,7 +181,14 @@ class SerialCmdBridge(Node):
         # Clamp to [-1, 1] then scale to PWM integer
         left_pwm  = int(max(-1.0, min(1.0, left_vel))  * MAX_PWM)
         right_pwm = int(max(-1.0, min(1.0, right_vel)) * MAX_PWM)
+        MIN_PWM = 30
 
+        if left_pwm != 0 and abs(left_pwm) < MIN_PWM:
+            left_pwm = MIN_PWM if left_pwm > 0 else -MIN_PWM
+
+        if right_pwm != 0 and abs(right_pwm) < MIN_PWM:
+            right_pwm = MIN_PWM if right_pwm > 0 else -MIN_PWM
+    
         # Publish monitoring state for Foxglove
         state_msg = Float32MultiArray()
         state_msg.data = [
