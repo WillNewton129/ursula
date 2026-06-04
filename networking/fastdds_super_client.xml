@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  fastdds_super_client.xml
+
+  FastDDS discovery server configuration for URSULA.
+  Used when the Jetson and dev laptop are on different subnets (e.g. over VPN).
+
+  SETUP:
+    1. Replace DISCOVERY_SERVER_IP below with the IP address of the machine
+       running the FastDDS discovery server (usually the Jetson).
+    2. Set this file as the active profile on both machines:
+         export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/ursula/networking/fastdds_super_client.xml
+       Add this line to ~/.bashrc so it is set on every login.
+    3. Start the discovery server on the Jetson:
+         fastdds discovery -i 0 -p 11811
+
+  If both machines are on the same local network, FastDDS multicast discovery
+  works automatically and this file is not needed — just set ROS_DOMAIN_ID.
+-->
 <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
 
   <participant profile_name="super_client_profile" is_default_profile="true">
@@ -11,7 +29,7 @@
               <metatrafficUnicastLocatorList>
                 <locator>
                   <udpv4>
-                    <address>100.113.154.126</address>
+                    <address>DISCOVERY_SERVER_IP</address>
                     <port>11811</port>
                   </udpv4>
                 </locator>
@@ -23,7 +41,7 @@
         <metatrafficUnicastLocatorList>
           <locator>
             <udpv4>
-              <address>100.113.154.126</address>
+              <address>DISCOVERY_SERVER_IP</address>
             </udpv4>
           </locator>
         </metatrafficUnicastLocatorList>
@@ -31,7 +49,7 @@
         <initialPeersList>
           <locator>
             <udpv4>
-              <address>100.113.154.126</address>
+              <address>DISCOVERY_SERVER_IP</address>
               <port>11811</port>
             </udpv4>
           </locator>
