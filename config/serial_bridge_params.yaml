@@ -6,8 +6,8 @@
     estop_button: 4
     turn_multiplier: 4.5
 
-    max_linear_vel: 0.08
-    max_angular_vel: 0.08
+    max_linear_vel: 0.4
+    max_angular_vel: 0.4
 
     min_angular_vel: 0.05
     angular_deadband: 0.005
