@@ -3,7 +3,7 @@ teleop_twist_joy_node:
     # Require enable button to publish (hold RB)
     require_enable_button: true
     enable_button: 5           # RB (hold to enable movement)
-    enable_turbo_button: -1    # Disable turbo (we'll use button 4 for estop)
+    enable_turbo_button: 1    # Disable turbo (we'll use button 4 for estop)
 
     #need to re-enable turbo!!!!!
     
@@ -24,7 +24,7 @@ teleop_twist_joy_node:
     
     # Turbo disabled (set to same as normal)
     scale_linear_turbo:
-      x: 0.50
+      x: 0.3
       y: 0.0
       z: 0.0
     
@@ -36,7 +36,7 @@ teleop_twist_joy_node:
     
     # Angular scaling
     scale_angular:
-      yaw: 0.05   # rotation speed
+      yaw: 0.3   # rotation speed
       pitch: 0.0
       roll: 0.0
     
