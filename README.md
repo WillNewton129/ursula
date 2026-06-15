@@ -1,6 +1,6 @@
 # URSULA
 
-**U**ncrewed G**r**ound Vehicle for **S**ensorised **L**ocalisation and **A**utonomous navigation
+**U**ncrewed G**r**ound Vehicle for **S**ensorised **L**ocalisation and **A**utonomous **N**avigation
 
 A GPS-free autonomous ground vehicle developed as a capstone project at the University of Liverpool. URSULA is a skid-steered platform built on four hoverboard (swegway) hub motors, carrying a Slamtec RPLIDAR A3 and a Luxonis OAK-D Pro camera. It maps its environment using LiDAR SLAM, localises within saved maps, and navigates autonomously using Nav2 — all without GPS.
 
@@ -20,7 +20,54 @@ A GPS-free autonomous ground vehicle developed as a capstone project at the Univ
 8. [Mapping and Localisation](#8-mapping-and-localisation)
 9. [Object Detection](#9-object-detection)
 10. [Configuration Reference](#10-configuration-reference)
-11. [Troubleshooting](#11-troubleshooting)
+11. [Recovery Procedure](#11-recovery-procedure)
+12. [Troubleshooting](#12-troubleshooting)
+
+---
+
+## Important Notes for Future Developers
+
+### Primary Launch Files (Supported)
+
+| Launch File | Purpose |
+|---|---|
+| `jetson_hardware_launch.launch.py` | Main onboard robot launch (Jetson) |
+| `dev_hardware_launch.launch.py` | Operator interface (Laptop) |
+| `sim_full_test_launch.launch.py` | Full simulation environment |
+| `sim_teleop_launch.launch.py` | Simulation teleoperation |
+
+### Legacy / Development Launch Files
+
+Several additional launch files remain in the repository from earlier development stages. These are retained for reference and experimentation but should not be assumed to be fully tested or maintained. Future development should use the primary launch files listed above.
+
+### Maps
+
+Maps are stored outside the repository:
+
+```
+~/ros2_ws/maps
+```
+
+Back up this directory before reflashing or replacing the Jetson.
+
+### Project Status
+
+**Implemented:**
+- Teleoperation
+- LiDAR SLAM
+- Localisation
+- Nav2 navigation
+- RViz visualisation
+- Foxglove integration
+- Remote networking
+- OAK-D integration
+- Object detection pipeline
+
+**Future Work:**
+- Semantic mapping
+- Detection integration into persistent maps
+- Advanced mission planning
+- Oxygen sensor integration
 
 ---
 
@@ -31,7 +78,7 @@ A GPS-free autonomous ground vehicle developed as a capstone project at the Univ
 | Chassis | Custom fabricated steel frame | 560 mm wide, 480 mm long |
 | Drive motors | 4× hoverboard hub motors | Skid-steer, rear pair driven |
 | Motor controller | Arduino Uno + custom H-bridge board | Firmware in `arduino/motorcontrol.ino` |
-| Compute | NVIDIA Jetson (onboard) | Runs full ROS stack |
+| Compute | NVIDIA Jetson Orin Nano (onboard) | Runs full ROS stack |
 | LiDAR | Slamtec RPLIDAR A3 | `/dev/ttyUSB0`, 256000 baud |
 | Camera | Luxonis OAK-D Pro | USB3, depthai_ros_driver |
 | Dev laptop | Any Ubuntu 22.04 machine | Runs joystick + RViz |
@@ -94,16 +141,16 @@ ursula/
 │   ├── steering_tuning.md        Skid-steer tuning reference
 │   └── twist_mux.yaml            cmd_vel priority chain
 ├── launch/
-│   ├── robot_launch.launch.py         MAIN real-robot launch (Jetson)
-│   ├── dev_hardware_launch.launch.py  Operator interface (laptop)
-│   ├── jetson_hardware_launch.launch.py  Minimal Jetson launch (SLAM only)
-│   ├── jetson_rtabmap.launch.py       Alternative: RTAB-Map 3D mapping
-│   ├── sim_full_test_launch.launch.py MAIN simulation launch
-│   ├── sim_teleop_launch.launch.py    Sim joystick (separate terminal)
-│   ├── camera.launch.py               OAK-D camera driver
-│   ├── detection.launch.py            YOLOv4 spatial detection
-│   ├── nav2_launch.launch.py          Nav2 stack (called by others)
-│   └── laptop_slam_test_launch.launch.py  Lidar SLAM on laptop only
+│   ├── jetson_hardware_launch.launch.py   MAIN real-robot launch (Jetson)
+│   ├── dev_hardware_launch.launch.py      Operator interface (laptop)
+│   ├── sim_full_test_launch.launch.py     MAIN simulation launch
+│   ├── sim_teleop_launch.launch.py        Sim joystick (separate terminal)
+│   ├── robot_launch.launch.py             Legacy full launch (reference only)
+│   ├── jetson_rtabmap.launch.py           Alternative: RTAB-Map 3D mapping
+│   ├── camera.launch.py                   OAK-D camera driver
+│   ├── detection.launch.py                YOLOv4 spatial detection
+│   ├── nav2_launch.launch.py              Nav2 stack (called by others)
+│   └── laptop_slam_test_launch.launch.py  LiDAR SLAM on laptop only
 ├── networking/
 │   └── fastdds_super_client.xml  FastDDS discovery server config
 ├── scripts/
@@ -134,26 +181,6 @@ ursula/
 Complete setup from a fresh Ubuntu 22.04 installation. Run all commands on **both the Jetson and the dev laptop** unless stated otherwise.
 
 ### 4.1 Install ROS 2 Humble
-
-```bash
-sudo apt update && sudo apt install -y locales
-sudo locale-gen en_GB.UTF-8
-sudo update-locale LC_ALL=en_GB.UTF-8 LANG=en_GB.UTF-8
-
-sudo apt install -y software-properties-common
-sudo add-apt-repository universe
-
-sudo apt update && sudo apt install -y curl
-sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
-  -o /usr/share/keyrings/ros-archive-keyring.gpg
-
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-  https://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | \
-  sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-sudo apt update
-sudo apt install -y ros-humble-desktop
-```
 
 ### 4.2 Install ROS 2 dependencies
 
@@ -194,23 +221,13 @@ git clone https://github.com/MAPIRlab/rf2o_laser_odometry.git
 
 ### 4.4 Install OAK-D driver (Jetson only)
 
-The OAK-D camera requires the Luxonis depthai-ros driver. Install it in a separate workspace to keep it isolated:
-
-```bash
-mkdir -p ~/oak_camera_ws/src && cd ~/oak_camera_ws/src
-git clone https://github.com/luxonis/depthai-ros.git --branch humble
-cd ~/oak_camera_ws
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-```
-
-Add to your shell setup (see section 4.6) so it is sourced before the ursula workspace.
+The OAK-D camera requires the Luxonis depthai-ros driver. For initial development, it was installed in a separate workspace to keep it isolated.
 
 ### 4.5 Clone and build URSULA
 
 ```bash
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
-git clone https://github.com/<your-org>/ursula.git
+git clone https://github.com/WillNewton129/ursula.git
 
 cd ~/ros2_ws
 rosdep install --from-paths src --ignore-src -r -y
@@ -236,16 +253,14 @@ source ~/ros2_ws/install/setup.bash
 
 # ROS domain — both machines must match
 export ROS_DOMAIN_ID=42
-
-# FastDDS discovery (required for Jetson ↔ laptop communication)
-# See networking/ for the config file
-export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/ursula/networking/fastdds_super_client.xml
 ```
 
 Apply immediately:
 ```bash
 source ~/.bashrc
 ```
+
+> **Note:** Do not set `RMW_IMPLEMENTATION` or `ROS_DISCOVERY_SERVER` in `.bashrc`. These are mode-specific and are set by the networking scripts described in Section 5.
 
 ### 4.7 Create maps directory
 
@@ -261,52 +276,161 @@ Open `arduino/motorcontrol.ino` in the Arduino IDE. Select **Arduino Uno** as th
 
 ## 5. Network Setup
 
-URSULA uses ROS 2's DDS discovery over a local network. Both machines must be on the same network with the same `ROS_DOMAIN_ID`.
+URSULA supports two operating modes depending on whether the Jetson and laptop are on the same network. Both modes require the same `ROS_DOMAIN_ID` in `~/.bashrc` (see section 4.6).
 
-### 5.1 Simple local network (same WiFi or ethernet)
+Switching between modes is done by sourcing the appropriate script rather than editing `~/.bashrc` directly. This keeps mode-specific settings isolated and avoids conflicts when multiple network interfaces are active.
 
-If the Jetson and laptop are on the same network, the `ROS_DOMAIN_ID` in `.bashrc` is all that is needed. Verify with:
+### 5.1 Local Mode (Recommended)
+
+Use when the Jetson and laptop are on the **same WiFi network, hotspot, or Ethernet connection**. No Fast DDS Discovery Server is required. This was the primary operating mode used throughout development.
+
+On both machines, source the local mode script before launching:
+> **Note:** Naming convention and file content needs confirming, files exist on all ROS devices.
+
+```bash
+source ~/local_mode.sh
+```
+
+`local_mode.sh` (place in `~` on both machines):
+
+```bash
+#!/bin/bash
+unset RMW_IMPLEMENTATION
+unset ROS_DISCOVERY_SERVER
+unset FASTRTPS_DEFAULT_PROFILES_FILE
+echo "Local mode active — standard DDS discovery"
+```
+
+Verify topics are visible across machines:
 
 ```bash
 # On laptop — should show Jetson's topics
 ros2 topic list
 ```
 
-### 5.2 FastDDS discovery server (different subnets or VPN)
+### 5.2 Remote Mode (Tailscale + Fast DDS Discovery Server)
 
-The `networking/fastdds_super_client.xml` file configures FastDDS to use a discovery server for peer finding across subnets. Edit the IP address in that file to match your discovery server's address, then ensure the `FASTRTPS_DEFAULT_PROFILES_FILE` variable is set as shown in section 4.6.
+Use when the Jetson and laptop are on **different networks**. Remote mode requires:
 
-### 5.3 Foxglove remote monitoring
+1. **Tailscale** — creates a VPN tunnel between devices
+2. **Fast DDS Discovery Server** — running on the laptop, used by the Jetson to find ROS peers
 
-Foxglove Studio runs on any device (laptop, tablet, phone) on the same network. Once `robot_launch.launch.py` is running on the Jetson with `foxglove:=true`:
+#### Tailscale Setup
+
+If you are setting up for the first time or migrating to a new account:
+
+1. Create a new Tailscale account at [tailscale.com](https://tailscale.com)
+2. Install Tailscale on both the Jetson and the dev laptop 
+3. Authenticate both devices to the same account
+4. Verify connectivity:
+
+```bash
+tailscale status
+tailscale ping <device-name>
+```
+
+5. Update `networking/fastdds_super_client.xml` with the new Discovery Server Tailscale IP (the laptop's Tailscale IP):
+
+```xml
+<udpv4 ... address="<LAPTOP_TAILSCALE_IP>" port="11811"/>
+```
+
+#### FastDDS Configuration
+
+FastDDS must be bound to the Tailscale network interface specifically. Binding to `0.0.0.0` causes instability when multiple network interfaces are active. The `networking/fastdds_super_client.xml` file handles this via `interfaceWhiteList`.
+
+#### Remote Mode Scripts
+
+`remote_mode.sh` (place in `~` on both machines):
+> **Note:** Naming convention and file content needs confirming, files exist on all ROS devices.
+
+
+```bash
+#!/bin/bash
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export ROS_DISCOVERY_SERVER="<LAPTOP_TAILSCALE_IP>:11811"
+export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/ursula/networking/fastdds_super_client.xml
+echo "Remote mode active — FastDDS discovery via Tailscale"
+```
+
+Replace `<LAPTOP_TAILSCALE_IP>` with the laptop's actual Tailscale IP address.
+
+### 5.3 Foxglove Remote Monitoring
+
+Foxglove Studio runs on any device (laptop, tablet, or phone) and provides remote monitoring, topic inspection, recording, and diagnostics.
+
+Once `jetson_hardware_launch.launch.py` is running on the Jetson with `foxglove:=true`:
 
 1. Open [Foxglove Studio](https://studio.foxglove.dev) or the desktop app
-2. Connect via WebSocket: `ws://<jetson-ip>:8765`
+2. Connect via WebSocket:
+
+| Mode | URL |
+|---|---|
+| Local | `ws://<jetson-ip>:8765` |
+| Remote | `ws://<jetson-tailscale-ip>:8765` |
+
 3. The URSULA web panel (if running) is accessible at `http://<jetson-ip>:8080`
 
 ---
 
 ## 6. Running the Robot
 
-Two terminals are required — one on the Jetson, one on the laptop. Both must have completed the shell setup in section 4.6.
+Two terminals are required — one on the Jetson, one on the laptop. Both must have completed the shell setup in section 4.6 and sourced the appropriate network mode script.
 
-### 6.1 Jetson — start the onboard stack
+### 6.1 Quick Start
+
+#### Local Mode
+
+Jetson:
 
 ```bash
-# SSH into the Jetson from the laptop
-ssh <user>@<jetson-ip>
-
-# Full stack: SLAM + Nav2 + camera + detection + Foxglove
-ros2 launch ursula robot_launch.launch.py
-
-# Manual teleop only (no Nav2 or camera, faster startup for testing)
-ros2 launch ursula robot_launch.launch.py nav2:=false camera:=false detection:=false
-
-# Localisation mode (after a map has been saved)
-ros2 launch ursula robot_launch.launch.py slam_mode:=localization
+source ~/local_mode.sh
+ros2 launch ursula jetson_hardware_launch.launch.py
 ```
 
-**robot_launch.launch.py arguments:**
+Laptop:
+
+```bash
+source ~/local_mode.sh
+ros2 launch ursula dev_hardware_launch.launch.py
+```
+
+#### Remote Mode
+
+Laptop (start the discovery server first):
+
+```bash
+fastdds discovery --server-id 0 --udp-address <LAPTOP_TAILSCALE_IP> --udp-port 11811
+source ~/remote_mode.sh
+```
+
+Jetson:
+
+```bash
+source ~/remote_mode.sh
+ros2 launch ursula jetson_hardware_launch.launch.py
+```
+
+Laptop (in a new terminal, after sourcing remote_mode.sh):
+
+```bash
+ros2 launch ursula dev_hardware_launch.launch.py
+```
+
+### 6.2 Jetson — onboard stack options
+
+```bash
+# Full stack: SLAM + Nav2 + camera + detection + Foxglove
+ros2 launch ursula jetson_hardware_launch.launch.py
+
+# Manual teleop only (no Nav2 or camera, faster startup for testing)
+ros2 launch ursula jetson_hardware_launch.launch.py nav2:=false camera:=false detection:=false
+
+# Localisation mode (after a map has been saved)
+ros2 launch ursula jetson_hardware_launch.launch.py slam_mode:=localization
+```
+
+**jetson_hardware_launch.launch.py arguments:**
 
 | Argument | Default | Description |
 |---|---|---|
@@ -316,7 +440,7 @@ ros2 launch ursula robot_launch.launch.py slam_mode:=localization
 | `camera` | `true` | Launch OAK-D camera driver |
 | `detection` | `true` | Launch YOLOv4 detection + detection_mapper |
 
-### 6.2 Laptop — start the operator interface
+### 6.3 Laptop — operator interface
 
 In a new terminal on the laptop:
 
@@ -326,7 +450,7 @@ ros2 launch ursula dev_hardware_launch.launch.py
 
 This starts the joystick driver, teleop node, and RViz.
 
-### 6.3 Controller layout (PS4 / Logitech F310)
+### 6.4 Controller layout (PS4 / Logitech F310)
 
 | Input | Action |
 |---|---|
@@ -344,38 +468,29 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard \
 
 Press `i` to move forward, `j`/`l` to turn, `k` to stop. Speed can be adjusted with `q`/`z`.
 
-### 6.4 Emergency stop
+### 6.5 Emergency stop
 
 Three methods are available:
 
 1. **Physical:** Release RB on the controller (twist_mux stops publishing)
-2. **Physical:** Press LB (button 4) — serial bridge cuts motor power directly
-3. **Remote:** Publish to `/ursula/estop`:
-   ```bash
-   ros2 topic pub --once /ursula/estop std_msgs/msg/Bool '{data: true}'
-   ```
+2. **Physical:** Press LB (button 4) — Arduino applies motor breaking
 
-Release the software stop:
-```bash
-ros2 topic pub --once /ursula/estop std_msgs/msg/Bool '{data: false}'
-```
-
-### 6.5 Recommended startup sequence for first run
+### 6.6 Recommended startup sequence for first run
 
 Run in this order to verify each layer before adding the next:
 
 ```bash
 # Step 1: motors + lidar + SLAM only
-ros2 launch ursula robot_launch.launch.py nav2:=false camera:=false detection:=false
+ros2 launch ursula jetson_hardware_launch.launch.py nav2:=false camera:=false detection:=false
 
 # Step 2: add camera, check topics appear
-ros2 launch ursula robot_launch.launch.py nav2:=false detection:=false
+ros2 launch ursula jetson_hardware_launch.launch.py nav2:=false detection:=false
 
 # Step 3: add detection, check markers in Foxglove
-ros2 launch ursula robot_launch.launch.py nav2:=false
+ros2 launch ursula jetson_hardware_launch.launch.py nav2:=false
 
 # Step 4: full stack
-ros2 launch ursula robot_launch.launch.py
+ros2 launch ursula jetson_hardware_launch.launch.py
 ```
 
 ---
@@ -454,12 +569,12 @@ View the map:
 xdg-open ~/ros2_ws/maps/ursula_map.png
 ```
 
-### 8.2 Localising on a saved map
+### 8.2 Localising on a saved map (Temperamental, Needs further testing)
 
 After saving a map, relaunch with `slam_mode:=localization`:
 
 ```bash
-ros2 launch ursula robot_launch.launch.py slam_mode:=localization
+ros2 launch ursula jetson_hardware_launch.launch.py slam_mode:=localization
 ```
 
 Verify localisation loaded correctly:
@@ -516,7 +631,7 @@ ls ~/oak_camera_ws/src/depthai-ros/depthai_examples/resources/
 If the camera or blob is unavailable:
 
 ```bash
-ros2 launch ursula robot_launch.launch.py detection:=false camera:=false
+ros2 launch ursula jetson_hardware_launch.launch.py detection:=false camera:=false
 ```
 
 ---
@@ -547,7 +662,26 @@ See `config/steering_tuning.md` for a full explanation of how to tune turning be
 
 ---
 
-## 11. Troubleshooting
+## 11. Recovery Procedure
+
+Complete recovery steps from a fresh Ubuntu 22.04 installation:
+
+1. Install Ubuntu 22.04
+2. Install ROS 2 Humble (section 4.1)
+3. Clone the URSULA repository (section 4.5)
+4. Install all ROS 2 dependencies (sections 4.2 – 4.3)
+5. Install the OAK-D workspace on the Jetson (section 4.4)
+6. Configure shell setup and create maps directory (sections 4.6 – 4.7)
+7. Install and configure Tailscale (section 5.2)
+8. Configure Fast DDS and update `networking/fastdds_super_client.xml` with new Tailscale IPs (section 5.2)
+9. Flash Arduino firmware (section 4.8)
+10. Restore maps from backup to `~/ros2_ws/maps`
+11. Verify Local Mode (section 5.1)
+12. Verify Remote Mode (section 5.2)
+
+---
+
+## 12. Troubleshooting
 
 ### LiDAR times out on startup
 
@@ -578,10 +712,11 @@ sudo usermod -aG dialout $USER
 
 ### No topics visible on laptop
 
-Verify both machines have identical `ROS_DOMAIN_ID` values:
+First confirm both machines have identical `ROS_DOMAIN_ID` values and are using the same network mode:
 
 ```bash
 echo $ROS_DOMAIN_ID   # Must match on both machines
+echo $RMW_IMPLEMENTATION  # Must match on both machines
 ```
 
 Check network connectivity:
@@ -590,25 +725,19 @@ ping <jetson-ip>
 ros2 topic list       # Should show Jetson's topics if DDS discovery is working
 ```
 
+In remote mode, confirm the Fast DDS Discovery Server is running on the laptop before sourcing `remote_mode.sh` on either machine.
+
+### FastDDS instability in remote mode
+
+If topics drop out intermittently during remote operation, FastDDS may be binding to the wrong network interface. Confirm that `networking/fastdds_super_client.xml` uses `interfaceWhiteList` to restrict traffic to the Tailscale interface rather than `0.0.0.0`.
+
 ### SLAM map is distorted or drifting
 
 RF2O odometry depends on the LiDAR scan being stable. Common causes of drift:
 
 - Robot moving too fast — reduce `max_linear_vel` in `serial_bridge_params.yaml`
-- Featureless environment (long empty corridor) — SLAM has nothing to match against; add visual landmarks or slow down
+- Featureless environment (long empty corridor / flat outdoor area) — SLAM has nothing to match against; add visual landmarks or slow down
 - LiDAR scan rate mismatch — confirm `freq: 15.0` in the RF2O node parameters matches the RPLIDAR A3 output rate
-
-### Nav2 immediately reports goal failed
-
-Nav2 requires an active `map → odom → base_link` TF chain. If this is not established before Nav2 starts, all goals will fail. The launch files delay Nav2 by 10–15 seconds for this reason. If goals still fail immediately:
-
-```bash
-# Check TF is complete
-ros2 run tf2_tools view_frames
-
-# Check slam_toolbox is publishing the map→odom transform
-ros2 topic hz /map
-```
 
 ### Gazebo robot does not move
 
